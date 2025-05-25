@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Event Categorizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-project-diagram"></i>
+                    <h1>SaaS Event Categorizer</h1>
+                </div>
+                <p class="subtitle">Explore and update event type categories across Okta, GitHub, and Google Workspace</p>
+                <div class="data-stats">
+                    <span class="stat-item">
+                        <i class="fas fa-database"></i>
+                        <span id="totalEvents">1,678</span> Events
+                    </span>
+                    <span class="stat-item">
+                        <i class="fas fa-tags"></i>
+                        <span id="totalCategories">15</span> Categories
+                    </span>
+                    <span class="stat-item">
+                        <i class="fas fa-code-branch"></i>
+                        <span id="totalSources">3</span> Sources
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <nav class="toolbar">
+            <div class="toolbar-section">
+                <div class="control-group">
+                    <label for="sourceFilter">Data Source</label>
+                    <select id="sourceFilter">
+                        <option value="all">All Sources</option>
+                        <option value="okta">Okta (920)</option>
+                        <option value="github">GitHub (652)</option>
+                        <option value="gws">Google Workspace (106)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="categoryFilter">Category</label>
+                    <select id="categoryFilter">
+                        <option value="all">All Categories</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="sensitivityFilter">Sensitivity</label>
+                    <select id="sensitivityFilter">
+                        <option value="all">All Levels</option>
+                        <option value="CRITICAL">Critical</option>
+                        <option value="HIGH">High</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="LOW">Low</option>
+                        <option value="NONE">None</option>
+                    </select>
+                </div>
+                
+                <div class="control-group search-group">
+                    <label for="searchInput">Search Events</label>
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search event types...">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toolbar-actions">
+                <button id="bulkEditBtn" class="btn btn-secondary">
+                    <i class="fas fa-edit"></i> Bulk Edit
+                </button>
+                <button id="exportBtn" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
+                <button id="importBtn" class="btn btn-success">
+                    <i class="fas fa-upload"></i> Import CSV
+                </button>
+                <input type="file" id="fileInput" accept=".csv" style="display: none;">
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="content-grid">
+                <aside class="sidebar">
+                    <div class="panel category-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-chart-pie"></i> Categories Overview</h3>
+                            <span class="panel-count" id="categoryCount">0</span>
+                        </div>
+                        <div class="panel-content" id="categoryList">
+                            <div class="loading">Loading categories...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel stats-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-chart-bar"></i> Statistics</h3>
+                        </div>
+                        <div class="panel-content" id="statsContent">
+                            <div class="loading">Loading stats...</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="main-panel">
+                    <div class="panel events-panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-list"></i> Events</h3>
+                            <div class="panel-actions">
+                                <span class="panel-count" id="eventsCount">0</span>
+                                <button id="selectAllBtn" class="btn btn-sm">
+                                    <i class="fas fa-check-square"></i> Select All
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-content">
+                            <div class="events-container" id="eventsContainer">
+                                <div class="loading">Select a category or adjust filters to view events</div>
+                            </div>
+                            <div class="pagination" id="pagination"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Event Categories</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editEventType">Event Type</label>
+                    <input type="text" id="editEventType" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editCategory">Category</label>
+                    <select id="editCategory">
+                        <option value="">Select Category</option>
+                    </select>
+                    <input type="text" id="newCategory" placeholder="Or create new category" style="margin-top: 10px;">
+                </div>
+                <div class="form-group">
+                    <label for="editSubCategory">Sub Category</label>
+                    <select id="editSubCategory">
+                        <option value="">Select Sub Category</option>
+                    </select>
+                    <input type="text" id="newSubCategory" placeholder="Or create new sub category" style="margin-top: 10px;">
+                </div>
+                <div class="form-group">
+                    <label for="editSensitivity">Sensitivity Level</label>
+                    <select id="editSensitivity">
+                        <option value="NONE">None</option>
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="CRITICAL">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editIsUserEvent">
+                        User-facing event
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelEdit" class="btn btn-secondary">Cancel</button>
+                <button id="saveEdit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Modal -->
+    <div id="bulkEditModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Bulk Edit Selected Events</h3>
+                <button class="modal-close" id="closeBulkModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Update <span id="selectedCount">0</span> selected events:</p>
+                <div class="form-group">
+                    <label for="bulkCategory">Category</label>
+                    <select id="bulkCategory">
+                        <option value="">No change</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bulkSubCategory">Sub Category</label>
+                    <select id="bulkSubCategory">
+                        <option value="">No change</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bulkSensitivity">Sensitivity Level</label>
+                    <select id="bulkSensitivity">
+                        <option value="">No change</option>
+                        <option value="NONE">None</option>
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="CRITICAL">Critical</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelBulkEdit" class="btn btn-secondary">Cancel</button>
+                <button id="saveBulkEdit" class="btn btn-primary">Apply Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
